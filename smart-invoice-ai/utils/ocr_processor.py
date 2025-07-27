@@ -196,53 +196,43 @@ class OCRProcessor:
             if image.mode != 'RGB':
                 image = image.convert('RGB')
 
-            # Convert PIL to OpenCV format
-            opencv_image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+            # If OpenCV is available, use advanced preprocessing
+            if cv2 is not None:
+                # Convert PIL to OpenCV format
+                opencv_image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
 
-            # Convert to grayscale
-            gray = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2GRAY)
+                # Convert to grayscale
+                gray = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2GRAY)
 
-            # Apply denoising
-            denoised = cv2.fastNlMeansDenoising(gray)
+                # Apply denoising
+                denoised = cv2.fastNlMeansDenoising(gray)
 
-            # Apply adaptive thresholding
-            thresh = cv2.adaptiveThreshold(
-                denoised, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                cv2.THRESH_BINARY, 11, 2
-            )
+                # Apply adaptive thresholding
+                thresh = cv2.adaptiveThreshold(
+                    denoised, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                    cv2.THRESH_BINARY, 11, 2
+                )
 
-            # Convert back to PIL
-            processed_image = Image.fromarray(thresh)
+                # Convert back to PIL
+                processed_image = Image.fromarray(thresh)
+            else:
+                # Fallback: Simple PIL preprocessing
+                # Convert to grayscale
+                processed_image = image.convert('L')
 
-            # Enhance contrast
-            enhancer = ImageEnhance.Contrast(processed_image)
-            processed_image = enhancer.enhance(1.5)
+                # Enhance contrast
+                enhancer = ImageEnhance.Contrast(processed_image)
+                processed_image = enhancer.enhance(2.0)
+
+                # Enhance sharpness
+                enhancer = ImageEnhance.Sharpness(processed_image)
+                processed_image = enhancer.enhance(1.5)
 
             return processed_image
 
         except Exception as e:
             logger.warning(f"Image preprocessing failed, using original: {e}")
             return image
-
-    def _extract_text_from_ocr_data(self, ocr_data):
-        """Extract clean text from OCR data"""
-        words = []
-
-        for i in range(len(ocr_data['text'])):
-            confidence = int(ocr_data['conf'][i])
-            text = ocr_data['text'][i].strip()
-
-            # Only include words with reasonable confidence
-            if confidence > 30 and text:
-                words.append(text)
-
-        # Join words and clean up
-        full_text = ' '.join(words)
-
-        # Basic text cleaning
-        full_text = self._clean_text(full_text)
-
-        return full_text
 
     def _calculate_confidence(self, ocr_data):
         """Calculate average confidence score"""
@@ -280,12 +270,46 @@ import pytesseract
 
 # Auto-detect Tesseract path for different environments
 def get_tesseract_path():
-    """Get appropriate Tesseract path for different environments"""
-    if os.path.exists('/usr/bin/tesseract'):
-        return '/usr/bin/tesseract'  # Linux/Cloud
-    elif os.path.exists('/opt/homebrew/bin/tesseract'):
-        return '/opt/homebrew/bin/tesseract'  # macOS M1
-    elif os.path.exists('/usr/local/bin/tesseract'):
-        return '/usr/local/bin/tesseract'  # macOS Intel
-    else:
-        return 'tesseract'  # Windows or in PATH
+    """Get the appropriate Tesseract path for different OS and cloud environments"""
+    import platform
+    import shutil
+
+    # First, try to find tesseract in PATH
+    tesseract_cmd = shutil.which('tesseract')
+    if tesseract_cmd:
+        return tesseract_cmd
+
+    system = platform.system().lower()
+
+    # Cloud environment paths (Linux)
+    cloud_paths = [
+        '/usr/bin/tesseract',
+        '/usr/local/bin/tesseract',
+        '/app/.apt/usr/bin/tesseract'  # Streamlit Cloud specific
+    ]
+
+    for path in cloud_paths:
+        if os.path.exists(path):
+            return path
+
+    # Local environment paths
+    if system == 'windows':
+        windows_paths = [
+            r'C:\Program Files\Tesseract-OCR\tesseract.exe',
+            r'C:\Users\{}\AppData\Local\Tesseract-OCR\tesseract.exe'.format(os.getenv('USERNAME', 'user'))
+        ]
+        for path in windows_paths:
+            if os.path.exists(path):
+                return path
+
+    elif system == 'darwin':  # macOS
+        mac_paths = [
+            '/opt/homebrew/bin/tesseract',
+            '/usr/local/bin/tesseract'
+        ]
+        for path in mac_paths:
+            if os.path.exists(path):
+                return path
+
+    # Fallback
+    return 'tesseract'
