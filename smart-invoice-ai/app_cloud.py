@@ -15,15 +15,43 @@ st.write("- Multi-format support (PDF, images, CSV)")
 st.write("- Professional web interface")
 
 st.info("🔧 Full functionality coming soon!")
-# Test OCR imports
+# Test OCR imports with PATH fixing
 try:
     import pytesseract
     import pdf2image
+    import os
+    import shutil
 
     st.success("✅ OCR modules imported successfully!")
 
-    # Test Tesseract version
-    version = pytesseract.get_tesseract_version()
-    st.info(f"📋 Tesseract version: {version}")
+    # Try to find Tesseract in common cloud locations
+    possible_paths = [
+        '/usr/bin/tesseract',
+        '/usr/local/bin/tesseract',
+        '/app/.apt/usr/bin/tesseract',
+        shutil.which('tesseract')
+    ]
+
+    tesseract_path = None
+    for path in possible_paths:
+        if path and os.path.exists(path):
+            tesseract_path = path
+            break
+
+    if tesseract_path:
+        pytesseract.pytesseract.tesseract_cmd = tesseract_path
+        st.success(f"✅ Tesseract found at: {tesseract_path}")
+
+        # Test version
+        version = pytesseract.get_tesseract_version()
+        st.info(f"📋 Tesseract version: {version}")
+
+        # Test basic OCR
+        st.info("🔍 Tesseract is ready for OCR processing!")
+
+    else:
+        st.error("❌ Tesseract not found in expected locations")
+        st.write("Searched paths:", possible_paths)
+
 except Exception as e:
-    st.error(f"❌ OCR import error: {e}")
+    st.error(f"❌ OCR error: {e}")
