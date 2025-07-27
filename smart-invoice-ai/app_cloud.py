@@ -15,3 +15,15 @@ st.write("- Multi-format support (PDF, images, CSV)")
 st.write("- Professional web interface")
 
 st.info("🔧 Full functionality coming soon!")
+# Test OCR imports
+try:
+    import pytesseract
+    import pdf2image
+
+    st.success("✅ OCR modules imported successfully!")
+
+    # Test Tesseract version
+    version = pytesseract.get_tesseract_version()
+    st.info(f"📋 Tesseract version: {version}")
+except Exception as e:
+    st.error(f"❌ OCR import error: {e}")
