@@ -2,70 +2,23 @@ import streamlit as st
 import pandas as pd
 import os
 from datetime import datetime
-from database.models import init_database, get_db_session, Invoice
-from PIL import Image
-import sys
-import traceback
-from utils.ocr_processor import OCRProcessor, get_tesseract_path
-from utils.file_handler import FileHandler, get_file_preview_info
-from database.models import OCRResult
-import time
-import streamlit as st
-import pandas as pd
-import os
-import sys
-import traceback
-import time
-from datetime import datetime
 from database.models import init_database, get_db_session, Invoice, OCRResult, FieldExtraction, UserFeedback
 from PIL import Image
+import sys
+import traceback
+import time
+import logging
+from typing import Dict, List, Any, Optional
 from utils.ocr_processor import OCRProcessor, get_tesseract_path
 from utils.file_handler import FileHandler, get_file_preview_info
 from utils.field_extractor import FieldExtractor, calculate_field_confidence_score
 from utils.learning_system import LearningSystem
 import plotly.express as px
 import plotly.graph_objects as go
-import streamlit as st
-import pandas as pd
-import os
-import sys
-import traceback
-import time
-import logging
-from datetime import datetime
-from typing import Dict, List, Any, Optional
-from database.models import init_database, get_db_session, Invoice, OCRResult, FieldExtraction, UserFeedback
-from PIL import Image
-
-# Import your custom modules
-try:
-    from utils.ocr_processor import OCRProcessor, get_tesseract_path
-    from utils.file_handler import FileHandler, get_file_preview_info
-    from utils.field_extractor import FieldExtractor, calculate_field_confidence_score
-    from utils.learning_system import LearningSystem
-except ImportError as e:
-    st.error(f"Import error: {e}")
-    st.stop()
-
-# Import plotting libraries
-try:
-    import plotly.express as px
-    import plotly.graph_objects as go
-except ImportError:
-    st.warning("Plotly not installed. Installing now...")
-    import subprocess
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "plotly"])
-    import plotly.express as px
-    import plotly.graph_objects as go
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-
-
-
-
 # Page configuration
 st.set_page_config(
     page_title="Smart Invoice AI System",

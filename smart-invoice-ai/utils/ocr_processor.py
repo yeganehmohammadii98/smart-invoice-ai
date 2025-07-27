@@ -1,16 +1,18 @@
 import pytesseract
 from pdf2image import convert_from_bytes
-import cv2
 import numpy as np
 from PIL import Image, ImageEnhance, ImageFilter
 import io
 import os
 import logging
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
+# Handle OpenCV import for cloud deployment
+try:
+    import cv2
+except ImportError:
+    # Fallback for cloud environments
+    cv2 = None
+    print("OpenCV not available, using PIL for image processing")
 
 class OCRProcessor:
     """Handles OCR processing for different file types"""
@@ -273,26 +275,17 @@ class OCRProcessor:
         return text
 
 
+import os
+import pytesseract
+
+# Auto-detect Tesseract path for different environments
 def get_tesseract_path():
-    """Get the appropriate Tesseract path for different OS"""
-    import platform
-
-    system = platform.system().lower()
-
-    if system == 'windows':
-        # Common Windows installation paths
-        possible_paths = [
-            r'C:\Program Files\Tesseract-OCR\tesseract.exe',
-            r'C:\Users\{}\AppData\Local\Tesseract-OCR\tesseract.exe'.format(os.getenv('USERNAME')),
-            'tesseract'  # If in PATH
-        ]
-
-        for path in possible_paths:
-            if os.path.exists(path):
-                return path
-
-        return 'tesseract'  # Default fallback
-
+    """Get appropriate Tesseract path for different environments"""
+    if os.path.exists('/usr/bin/tesseract'):
+        return '/usr/bin/tesseract'  # Linux/Cloud
+    elif os.path.exists('/opt/homebrew/bin/tesseract'):
+        return '/opt/homebrew/bin/tesseract'  # macOS M1
+    elif os.path.exists('/usr/local/bin/tesseract'):
+        return '/usr/local/bin/tesseract'  # macOS Intel
     else:
-        # Linux/Mac - usually in PATH
-        return 'tesseract'
+        return 'tesseract'  # Windows or in PATH
