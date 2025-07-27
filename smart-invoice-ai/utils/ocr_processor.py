@@ -1,21 +1,18 @@
 import pytesseract
 from pdf2image import convert_from_bytes
 import numpy as np
-from PIL import Image, ImageEnhance, ImageFilter
+from PIL import Image, ImageEnhance, ImageFilter, ImageOps
 import io
 import os
 import logging
 
-# Handle OpenCV import for cloud deployment
-try:
-    import cv2
-except ImportError:
-    # Fallback for cloud environments
-    cv2 = None
-    print("OpenCV not available, using PIL for image processing")
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 class OCRProcessor:
-    """Handles OCR processing for different file types"""
+    """Handles OCR processing for different file types (Cloud-safe version)"""
 
     def __init__(self, tesseract_path=None):
         """Initialize OCR processor
@@ -190,49 +187,54 @@ class OCRProcessor:
             }
 
     def _preprocess_image(self, image):
-        """Preprocess image for better OCR results"""
+        """Preprocess image for better OCR results using PIL only"""
         try:
             # Convert to RGB if necessary
             if image.mode != 'RGB':
                 image = image.convert('RGB')
 
-            # If OpenCV is available, use advanced preprocessing
-            if cv2 is not None:
-                # Convert PIL to OpenCV format
-                opencv_image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+            # Convert to grayscale
+            gray_image = image.convert('L')
 
-                # Convert to grayscale
-                gray = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2GRAY)
+            # Enhance contrast
+            enhancer = ImageEnhance.Contrast(gray_image)
+            contrast_image = enhancer.enhance(2.0)
 
-                # Apply denoising
-                denoised = cv2.fastNlMeansDenoising(gray)
+            # Enhance sharpness
+            enhancer = ImageEnhance.Sharpness(contrast_image)
+            sharp_image = enhancer.enhance(1.5)
 
-                # Apply adaptive thresholding
-                thresh = cv2.adaptiveThreshold(
-                    denoised, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                    cv2.THRESH_BINARY, 11, 2
-                )
+            # Auto-level (similar to histogram equalization)
+            auto_image = ImageOps.autocontrast(sharp_image)
 
-                # Convert back to PIL
-                processed_image = Image.fromarray(thresh)
-            else:
-                # Fallback: Simple PIL preprocessing
-                # Convert to grayscale
-                processed_image = image.convert('L')
+            # Apply slight blur to reduce noise
+            smooth_image = auto_image.filter(ImageFilter.GaussianBlur(radius=0.5))
 
-                # Enhance contrast
-                enhancer = ImageEnhance.Contrast(processed_image)
-                processed_image = enhancer.enhance(2.0)
-
-                # Enhance sharpness
-                enhancer = ImageEnhance.Sharpness(processed_image)
-                processed_image = enhancer.enhance(1.5)
-
-            return processed_image
+            return smooth_image
 
         except Exception as e:
             logger.warning(f"Image preprocessing failed, using original: {e}")
             return image
+
+    def _extract_text_from_ocr_data(self, ocr_data):
+        """Extract clean text from OCR data"""
+        words = []
+
+        for i in range(len(ocr_data['text'])):
+            confidence = int(ocr_data['conf'][i])
+            text = ocr_data['text'][i].strip()
+
+            # Only include words with reasonable confidence
+            if confidence > 30 and text:
+                words.append(text)
+
+        # Join words and clean up
+        full_text = ' '.join(words)
+
+        # Basic text cleaning
+        full_text = self._clean_text(full_text)
+
+        return full_text
 
     def _calculate_confidence(self, ocr_data):
         """Calculate average confidence score"""
@@ -257,7 +259,6 @@ class OCRProcessor:
 
         # Remove common OCR artifacts
         text = text.replace('|', 'I')  # Common misread
-        text = text.replace('0', 'O')  # In some contexts
 
         # Basic formatting
         text = text.strip()
@@ -265,10 +266,6 @@ class OCRProcessor:
         return text
 
 
-import os
-import pytesseract
-
-# Auto-detect Tesseract path for different environments
 def get_tesseract_path():
     """Get the appropriate Tesseract path for different OS and cloud environments"""
     import platform
