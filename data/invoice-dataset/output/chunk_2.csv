@@ -1,0 +1,11 @@
+first_name,last_name,email,product_id,qty,amount,invoice_date,address,city,stock_code,job
+Zachary Medina,Brendan Chambers,zreed@example.com,104,5,13.0,12/12/1992,79633 Golden Mountains Suite 172,Williamsborough,63931341,"Surveyor, land/geomatics"
+Jill Villanueva,Jonathan Caldwell,christopherorozco@example.org,173,1,10.71,07/01/2020,59120 Hayes Expressway,New Christianfurt,6666309,"Therapist, speech and language"
+Anthony Jennings,Luis Braun,christopher64@example.net,132,7,26.25,14/06/2019,931 Ronald Cape Suite 627,Franklinburgh,99504946,Graphic designer
+Steven Hubbard,Justin Rosales,robertgardner@example.com,140,5,33.19,15/03/2010,399 Robert Orchard Suite 518,Hatfieldfurt,21249600,Chiropractor
+Adam Fischer,Thomas Hudson,juarezstephanie@example.net,183,7,26.32,26/06/2002,071 Wells Valley,New Cherylchester,47746923,Print production planner
+Joseph Grant,Joshua Walters,craig44@example.org,108,7,6.59,20/08/2009,89873 Wheeler Dale Suite 550,Lake Joshuamouth,20484989,Commercial/residential surveyor
+Mitchell Raymond,Dalton Peck,zlarsen@example.com,196,8,46.3,31/03/1997,7519 Robbins Forest,Wigginsport,35270416,"Pharmacist, hospital"
+Clayton Duncan,Joseph Wood,tgraves@example.net,133,8,26.84,15/08/1982,73351 Benson Views Suite 424,Port Russell,1290400,"Research officer, trade union"
+Eric Miller,Victoria Salas,jrivas@example.com,150,1,48.57,30/09/1996,6924 Jeff Spurs Suite 172,East Juan,6481407,"Social research officer, government"
+Barbara Johnston,Lindsey Davidson,daniellebecker@example.net,127,1,46.38,21/06/2010,1397 Barrera Garden Apt. 755,Noahstad,82560621,"Buyer, retail"

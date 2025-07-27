@@ -1,0 +1,11 @@
+Field,Value
+Invoice Number,CSV-2024-001
+Date,2024-03-15
+Supplier,DataCorp Ltd
+Customer,Client Systems Inc
+Description,Data Processing Services
+Quantity,1
+Unit Price,$3000.00
+Total,$3000.00
+VAT,$300.00
+Grand Total,$3300.00
